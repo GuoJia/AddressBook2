@@ -6,9 +6,6 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-	string str = "luojian henhao";
-	int i = str.find("jianluo");
-
 	string name(argv[0]);
 	size_t loc = name.find_last_of("/");
 	if (loc == string::npos)
