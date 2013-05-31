@@ -1,6 +1,11 @@
+/**Copyright (c) 2013 Jian Luo (romain_cool@163.com)
+* Command.cpp
+* The implementation of Command class: implement all the functions in Command class
+*/
 #include "Command.h"
 #include<iostream>
 #include<fstream>
+#include<stdlib.h>
 
 using namespace std;
 
@@ -9,9 +14,6 @@ using namespace std;
 */
 Command::Command(void)
 {
-	//string jsonStr = "{\"entries\": {\"lilei\" : {\"age\": 27,\"mobile\" : \"13700000000\",\"address\" : \"Earth somewhere\"}, \"hanmeimei\" : {\"age\": 26,\"mobile\" : \"13700000001\",\"address\" : \"Earth somewhere else\"}}}";
-	//m_jsonList = new JSONList(jsonStr);
-	
 	m_shellName = "AB";
 
 	string jsonStr = ReadFile();
@@ -34,6 +36,7 @@ Command::Command(string shellName)
 
 Command::~Command(void)
 {
+	delete m_jsonList;
 }
 
 /**

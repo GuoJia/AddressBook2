@@ -1,3 +1,7 @@
+/**Copyright (c) 2013 Jian Luo (romain_cool@163.com)
+* JSONList.h
+* JSONList class: acts as the implementation of the commands of the application
+*/
 #ifndef JSON_LIST
 #define JSON_LIST
 
@@ -25,6 +29,8 @@ public:
 	void getcat(std::string key);
 	void getadd();
 	void getremove();
+
+	void DeleteNode(JSONNode **node);
 
 	std::string DeleteChar(std::string str, char ch);
 	//std::string deleteQuote(std::string str);

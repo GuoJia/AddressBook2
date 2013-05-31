@@ -1,6 +1,9 @@
+/**Copyright (c) 2013 Jian Luo (romain_cool@163.com)
+* Main.cpp
+* The entrance of the command application
+*/
 #include"JSONList.h"
 #include"Command.h"
-#include<iostream>
 
 using namespace std;
 

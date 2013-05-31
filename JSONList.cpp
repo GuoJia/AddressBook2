@@ -1,7 +1,10 @@
+/**Copyright (c) 2013 Jian Luo (romain_cool@163.com)
+* JSONList.cpp
+* The implementation of JSONList class: implement all the functions in JSONList class
+*/
 #include "JSONList.h"
 #include<iostream>
-//#include<vector>
-
+#include<stdlib.h>
 
 using namespace std;
 
@@ -31,6 +34,7 @@ JSONList::JSONList(string jsonStr)
 		cout << "JSON data structure wrong, constructor failure!\n";
 		exit(0);
 	}
+
 	m_dirty = false;
 	m_pRootNode = new JSONNode();
 	m_pRootNode->key = "root";
@@ -74,10 +78,12 @@ JSONList::JSONList(string jsonStr)
 		key = jsonStr.substr(i,j-i);
 		string value = jsonStr.substr(j+1,k-j);
 		jsonStr  = jsonStr.substr(k+1);
+
 		if (jsonStr == "}")
 		{
 			jsonStr = "";
 		}
+
 		JSONNode *node = new JSONNode();
 		node->key = key;
 		node->value = "{}";
@@ -108,6 +114,7 @@ JSONList::JSONList(string jsonStr)
 				value = "";
 			}
 			value = value.substr(kk+1);
+
 			JSONNode *subNode = new JSONNode();
 			subNode->key = subKey;
 			subNode->value = subValue;
@@ -133,7 +140,38 @@ JSONList::JSONList(string jsonStr)
 */
 JSONList::~JSONList(void)
 {
+	DeleteNode(&m_pRootNode);
+	m_pRootNode = NULL;
+}
 
+/**
+*
+*/
+void JSONList::DeleteNode(JSONNode **node)
+{
+	if (*node == NULL)
+	{
+		return;
+	}
+
+	if ((*node)->pSub == NULL && (*node)->pNext == NULL)
+	{
+		JSONNode *pTempNode = (*node)->pPrev;
+		
+		delete (*node);
+		(*node) = NULL;
+
+		return;
+	}
+
+	DeleteNode(&(*node)->pNext);
+	(*node)->pNext = NULL;
+
+	DeleteNode(&(*node)->pSub);
+	(*node)->pSub = NULL;
+	
+	DeleteNode(&(*node));
+	(*node) = NULL;
 }
 
 /**
@@ -153,51 +191,6 @@ void JSONList::getls()
 		pTemp = pTemp->pNext;
 	}
 	cout << endl;
-}
-
-/**
-* Get the value of a JSONNode recursively
-* @return: the value of a given node
-*/
-string JSONList::GetValue(JSONNode *node)
-{
-	if (node->pSub == NULL)
-	{
-		return (node->value);
-	}
-	
-	/*
-	if (node->value == "")
-	{
-		node->value = "{}";
-	}
-	node->value = "{}";*/
-
-	string value = "{}";
-	int len;
-
-	JSONNode *pTempNode = node->pSub;
-	while (pTempNode != NULL)
-	{
-		len = value.size();
-		value.insert(len-1,pTempNode->key);
-
-		len = value.size();
-		value.insert(len-1,":");
-
-		len = value.size();
-		value.insert(len-1,GetValue(pTempNode));
-
-		pTempNode = pTempNode->pNext;
-
-		if (pTempNode != NULL)
-		{
-			len = value.size();
-			value.insert(len-1,",");
-		}
-	}
-
-	return value;
 }
 
 /**
@@ -252,7 +245,8 @@ void JSONList::getcat(string key)
 }
 
 /**
-*
+* Add command: add a node with a given key and a given value
+* Enter key and value with a given format
 */
 void JSONList::getadd()
 {
@@ -313,8 +307,6 @@ void JSONList::getadd()
 		pTempNode->pSub = node;
 	}
 	
-	
-
 	content = DeleteChar(content, ' ');
 	int subFlag = 1;
 	JSONNode *subPFlag = node;
@@ -353,7 +345,8 @@ void JSONList::getadd()
 }
 
 /**
-*
+* Delete command: delete a node with a given key
+* Enter a key which exists in database
 */
 void JSONList::getremove()
 {
@@ -382,189 +375,112 @@ void JSONList::getremove()
 		return;
 	}
 
-	if (pTempNode->pSub == NULL)
+	JSONNode *pTempPrev = pTempNode->pPrev;
+
+	if (pTempNode->pPrev->pPrev->key == "root")
 	{
-		if (m_pCurrNode->key == key)
+		pTempPrev->pSub = pTempNode->pNext;
+
+		m_pCurrNode = m_pCurrNode->pNext;
+		if (m_pCurrNode != NULL)
 		{
-			m_pCurrNode = m_pCurrNode->pNext;
+			m_pCurrNode->pPrev = m_pRootNode->pSub;
 		}
-		pTempNode->pNext->pPrev = pTempNode->pPrev;
-		pTempNode->pPrev->pNext = pTempNode->pNext;
-		delete pTempNode;
-		pTempNode = NULL;
-		return;
+		m_pRootNode->pSub->pSub = m_pCurrNode;
+	}else
+	{
+		pTempPrev->pNext = pTempNode->pNext;
 	}
 
-	JSONNode *pSubNode = pTempNode->pSub;
-	JSONNode *pCurNode = pSubNode;
-	while (pCurNode != pTempNode)
-	{
-		while (pSubNode->pNext != NULL)
-		{
-			pSubNode = pSubNode->pNext;
-		}
-		pCurNode = pSubNode->pPrev;
-		delete pSubNode;
-		pSubNode = NULL;
-		pCurNode->pNext = NULL;
-		pSubNode = pCurNode;
-	}
-
-	pCurNode->pSub = NULL;
-	pCurNode = pCurNode->pPrev;
-	delete pTempNode;
-	pTempNode = NULL;
-	if (pCurNode->pPrev->key == "root")
-	{
-		pCurNode->pSub = NULL;
-		m_pCurrNode = NULL;
-	}
-	pCurNode->pNext = NULL;
-	//m_pCurrNode = pCurNode;
+	DeleteNode(&(pTempNode->pSub));
+	delete (pTempNode);
+	
 	m_dirty = true;
 }
 
 /**
-*
+* Get the value of a JSONNode recursively
+* @return: the value of a given node
 */
-string JSONList::DeleteChar(string str, char ch)
+string JSONList::GetValue(JSONNode *node)
 {
-	//string noSpaceStr = "";
-	int count = 0;
-	int len = str.size();
-	for (int i = 0; i < len; i++)
+	if (node->pSub == NULL)
 	{
-		if (str[i] == ch)
-		{
-			count++;
-		}
-	}
-	int *arr = new int[count];
-
-	int j = 0;
-	for (int i = 0; i < len; i++)
-	{
-		if (str[i] == ch)
-		{
-			arr[j++] = i;
-			if (j == count)
-			{
-				break;
-			}	
-		}
+		return (node->value);
 	}
 
-	/*for (int i = 0; i < count; i++)
+	string value = "{}";
+	int len;
+
+	JSONNode *pTempNode = node->pSub;
+	while (pTempNode != NULL)
 	{
-		cout << arr[i] << endl;
-	}*/
+		len = value.size();
+		value.insert(len-1,pTempNode->key);
 
-	for (int i = count-1; i >= 0; i--)
-	{
-		str.erase(arr[i],1);
-	}
+		len = value.size();
+		value.insert(len-1,":");
 
-	delete []arr;
+		len = value.size();
+		value.insert(len-1,GetValue(pTempNode));
 
-	return str;
-}
+		pTempNode = pTempNode->pNext;
 
-/*string JSONList::deleteQuote(string str)
-{
-	int count = 0;
-	int len = str.size();
-	for (int i = 0; i < len; i++)
-	{
-		if (str[i] == '\"')
+		if (pTempNode != NULL)
 		{
-			count++;
-		}
-	}
-	int *arr = new int[count];
-
-	int j = 0;
-	for (int i = 0; i < len; i++)
-	{
-		if (str[i] == '\"')
-		{
-			arr[j++] = i;
-			if (j == count)
-			{
-				break;
-			}	
+			len = value.size();
+			value.insert(len-1,",");
 		}
 	}
 
-	for (int i = count-1; i >= 0; i--)
-	{
-		str.erase(arr[i],1);
-	}
-
-	delete []arr;
-
-	return str;
-}*/
-
-bool JSONList::isFormatLegal(string content)
-{
-	int len = content.size();
-	if (content[0] != '{' || content[len-1] != '}')
-	{
-		return false;
-	}
-
-	string str = content.substr(1,len-2);
-	int i = str.find(",");
-	while (i != -1)
-	{
-		string str0 = str.substr(0,i);
-		if (str0[0] != '\"')
-		{
-			return false;
-		}else
-		{
-			str0 = str0.substr(1);
-			int j = str0.find("\"");
-			if (j == -1)
-			{
-				return false;
-			}else if (str0[j+1] != ':')
-			{
-				return false;
-			}
-		}
-		str = str.substr(i+1);
-		i = str.find(",");
-	}
-
-	if (str.empty())
-	{
-		return false;
-	}else
-	{
-		string str0 = str.substr(0,i);
-		if (str0[0] != '\"')
-		{
-			return false;
-		}else
-		{
-			str0 = str0.substr(1);
-			int j = str0.find("\"");
-			if (j == -1)
-			{
-				return false;
-			}else if (str0[j+1] != ':')
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
+	return value;
 }
 
 /**
-* 
+* Delete a given char from a string
+* @param str
+* @param ch
+*/
+string JSONList::DeleteChar(string str, char ch)
+{
+	int count = 0;
+	int len = str.size();
+	for (int i = 0; i < len; i++)
+	{
+		if (str[i] == ch)
+		{
+			count++;
+		}
+	}
+	int *arr = new int[count];
+
+	int j = 0;
+	for (int i = 0; i < len; i++)
+	{
+		if (str[i] == ch)
+		{
+			arr[j++] = i;
+			if (j == count)
+			{
+				break;
+			}	
+		}
+	}
+
+	for (int i = count-1; i >= 0; i--)
+	{
+		str.erase(arr[i],1);
+	}
+
+	delete []arr;
+
+	return str;
+}
+
+/**
+* Judge the format of the outer of a JSON data structure
+* Format: {"entries": {"xx": {}, "yy": {}}}
+* @param content
 */
 bool JSONList::isLegalOuter(string content)
 {
@@ -601,8 +517,6 @@ bool JSONList::isLegalOuter(string content)
 		return false;
 	}
 
-	//vector<string> strVector;
-
 	while (i < len-1)
 	{
 		if (content[i+1] != ',')
@@ -610,7 +524,6 @@ bool JSONList::isLegalOuter(string content)
 			return false;
 		}
 
-		//strVector.push_back(content.substr(0,i+1));
 		if (!isLegalInner(content.substr(0,i+1)))
 		{
 			return false;
@@ -624,7 +537,7 @@ bool JSONList::isLegalOuter(string content)
 			return false;
 		}
 	}
-	//strVector.push_back(content);
+
 	if (!isLegalInner(content))
 	{
 		return false;
@@ -634,7 +547,9 @@ bool JSONList::isLegalOuter(string content)
 }
 
 /**
-*
+* Judge the format of the inner of a JSON data structure
+* Format: lilei: {\"age\":28,\"mobile\":\"13700000000\",\"address\":\"China\"}
+* @param content
 */
 bool JSONList::isLegalInner(string content)
 {
@@ -693,7 +608,8 @@ bool JSONList::isLegalInner(string content)
 }
 
 /**
-*
+* Judge the format of a number
+* @param str
 */
 bool JSONList::isNumber(string str)
 {
@@ -715,7 +631,8 @@ bool JSONList::isNumber(string str)
 }
 
 /**
-*
+* Judge the format of a mobile number
+* @param str
 */
 bool JSONList::isMobile(string str)
 {
@@ -736,7 +653,8 @@ bool JSONList::isMobile(string str)
 }
 
 /**
-*
+* Judge the format of an address
+* @param str
 */
 bool JSONList::isAddress(string str)
 {
@@ -749,7 +667,8 @@ bool JSONList::isAddress(string str)
 }
 
 /**
-*
+* Find a node with a given key
+* @param key
 */
 bool JSONList::isKeyExist(string key)
 {
@@ -766,7 +685,7 @@ bool JSONList::isKeyExist(string key)
 }
 
 /**
-*
+* Get the root node
 */
 JSONNode* JSONList::GetRootNode()
 {
@@ -774,7 +693,7 @@ JSONNode* JSONList::GetRootNode()
 }
 
 /**
-*
+* Get the current node
 */
 JSONNode* JSONList::GetCurrNode()
 {
@@ -782,7 +701,7 @@ JSONNode* JSONList::GetCurrNode()
 }
 
 /**
-*
+* Get the dirty flag
 */
 bool JSONList::GetDirty()
 {

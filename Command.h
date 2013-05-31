@@ -1,3 +1,7 @@
+/**Copyright (c) 2013 Jian Luo (romain_cool@163.com)
+* Command.h
+* Command class: acts as the interface between the user and the application
+*/
 #ifndef COMMAND
 #define COMMAND
 
@@ -29,6 +33,7 @@ private:
 	
 	std::string m_firstCmd;
 	std::string m_secondCmd;
+
 	std::string m_shellName;
 };
 
