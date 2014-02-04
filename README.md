@@ -78,7 +78,7 @@ Browse and modify a JSON data structure with `ls`,`cd`,`cat`, `add`, `remove`
     
     Note: the key should be identical, if trying to add duplicated key, just display an error message 
 
-* use `remove` command to get one or more address entries
+* use `remove` command to remove one or more address entries
     
     `ab> cd entries`
 
